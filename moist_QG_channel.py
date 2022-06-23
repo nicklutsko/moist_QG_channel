@@ -16,7 +16,7 @@ import qg_io
 #  Declare some parameters, arrays, etc.
 
 opt = 3 # 1 = just the linear parts, 2 = just the nonlinear parts, 3 = full model
-moist = "moist" #moist or dry
+model = "moist" #moist or dry
 
 
 N = 128 #zonal size of spectral decomposition
