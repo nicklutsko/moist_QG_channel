@@ -38,8 +38,8 @@ Er = .1 #Evaporation rate
 g = 0.04 #leapfrog filter coefficient
 
 init = "cold" #cold = cold start, load = load data from res_filename
-filename = "../../data/moist_qg/N" + str(N2) + "_" + str(L) + "_" + str(C) + "_" + str(Er)  + "_" + str(U_1) + ".nc"
-res_filename = "../../data/moist_qg/N" + str(N2) + "_" + str(L) + "_" + str(C) + "_" + str(Er)  + "_" + str(U_1) + "_res"
+filename = "N" + str(N2) + "_" + str(L) + "_" + str(C) + "_" + str(Er)  + "_" + str(U_1) + ".nc"
+res_filename = "N" + str(N2) + "_" + str(L) + "_" + str(C) + "_" + str(Er)  + "_" + str(U_1) + "_res"
 
 x = np.linspace( -Lx / 2, Lx / 2, N ) 
 y = np.linspace( -Ly / 2, Ly / 2, N2 ) 
@@ -101,7 +101,8 @@ zemf1 = np.zeros( ( (tot_time - lim ) // st , N2 ) )
 zemf2 = np.zeros( ( (tot_time - lim )  // st, N2 ) )
 zehf1 = np.zeros( ( (tot_time - lim ) // st , N2 ) )
 zehf2 = np.zeros( ( (tot_time - lim )  // st, N2 ) )
-
+ztauP = np.zeros( ( (tot_time - lim )  // st, N2 ) )
+zetauP = np.zeros( ( (tot_time - lim )  // st, N2 ) )
 
 
 #######################################################
@@ -206,7 +207,7 @@ def exponential_cutoff( data, a, s, kcut ):
 #######################################################
 #  Initial conditions:
 if init == "cold":
-    ds, zu1n, zu2n, ztaun, mn, Pn, En, wn, wskewn, eke1n, eke2n, emf1n, emf2n, ehf1n, ehf2n, time = qg_io.create_file( filename, y, int(tot_time - lim))
+    ds, zu1n, zu2n, ztaun, mn, Pn, En, wn, tauPn, etauPn, wskewn, eke1n, eke2n, emf1n, emf2n, ehf1n, ehf2n, time = qg_io.create_file( filename, y, int(tot_time - lim))
 
     psic_1[0] = [ [ random() for i in range(N // 2 + 1 ) ] for j in range(N2) ]
     psic_2[0] = [ [ random() for i in range(N // 2 + 1 ) ] for j in range(N2) ]
@@ -237,11 +238,10 @@ if init == "cold":
 
 elif init == "load":
     psic_1, psic_2, qc_1, qc_2, mc, t0 = qg_io.load_res_file(  res_filename )
-    if model == "moist":
+    if model == "dry":
          ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2, time = qg_io.load_dry_data( filename )
     else:
-         ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2, zm, zP, zE, zw, zwskew, time = qg_io.load_moist_data( filename ) 
-
+         ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2, zm, zP, zE, zw, ztauP, zetauP, zwskew, time = qg_io.load_moist_data( filename ) 
  
 
 #######################################################
@@ -505,6 +505,9 @@ for i in range( t0, ts ):
                 zP[(int(i * dt) - lim) // st] = np.mean( P[:, :], axis = 1 )
                 zE[(int(i * dt) - lim) // st] = np.mean( E[:, :], axis = 1 )
                 zw[(int(i * dt) - lim) // st] = np.mean( w[:, :], axis = 1 )
+                ztauP[(int(i * dt) - lim) // st] = np.mean( P[:, :], axis = 1 ) * zmtau[:]
+                eP = P -np.mean( P[:, :], axis = 1 )[:, np.newaxis]
+                zetauP[(int(i * dt) - lim) // st] = np.mean( eddy_tau[:, :] * eP, axis = 1 )
                 eddy_w = w - zmw[:, np.newaxis] 
                 zwskew[(int(i * dt) - lim) // st] = -np.mean( eddy_w ** 3, axis = 1 ) / np.mean( eddy_w ** 2, axis = 1 ) ** (3. / 2.)
 
@@ -514,7 +517,7 @@ for i in range( t0, ts ):
             if model == "moist":
                 qg_io.write_data_dry( ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2 )
             else:
-                qg_io.write_data_moist( ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2, zm, zP, zE, zw, zwskew )       
+                qg_io.write_data_moist( ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2, zm, zP, zE, zw, ztauP, zetauP, zwskew )       
         
     end = ti.time()
     if i % 1000 == 0:
@@ -522,5 +525,4 @@ for i in range( t0, ts ):
         time_left = delt * (float(ts) - float(i))
         print("1 iteration = %s" % delt)
         print("Estimated time left: %0.1f" % time_left)
-
 
