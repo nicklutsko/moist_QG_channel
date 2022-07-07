@@ -49,6 +49,16 @@ def create_file( filename, y, t ):
 		    'f4',
 		    dimensions=['time', 'y'],
 		    zlib=True)
+	tauPn = ds.createVariable(
+		    'ztauP',
+		    'f4',
+		    dimensions=['time', 'y'],
+		    zlib=True)
+	etauPn = ds.createVariable(
+		    'etauP',
+		    'f4',
+		    dimensions=['time', 'y'],
+		    zlib=True)
 	wskewn = ds.createVariable(
 		    'zwskew',
 		    'f4',
@@ -106,6 +116,12 @@ def create_file( filename, y, t ):
 	wn.setncatts({'standard_name': 'w',
 		                  'units': 'dimensionless',
 		                  'grid_mapping': 'x_y'})
+	tauPn.setncatts({'standard_name': 'ztauP',
+		                  'units': 'dimensionless',
+		                  'grid_mapping': 'x_y'})
+	etauPn.setncatts({'standard_name': 'etauP',
+		                  'units': 'dimensionless',
+		                  'grid_mapping': 'x_y'})
 	wskewn.setncatts({'standard_name': 'w skew',
 		                  'units': 'dimensionless',
 		                  'grid_mapping': 'x_y'})
@@ -128,7 +144,7 @@ def create_file( filename, y, t ):
 		                  'units': 'dimensionless',
 		                  'grid_mapping': 'x_y'})
 
-	return ds, zu1n, zu2n, ztaun, mn, Pn, En, wn, wskewn, eke1n, eke2n, emf1n, emf2n, ehf1n, ehf2n, time
+	return ds, zu1n, zu2n, ztaun, mn, Pn, En, wn, tauPn, etauPn, wskewn, eke1n, eke2n, emf1n, emf2n, ehf1n, ehf2n, time
 
 def sdat(c, F):
     print("Saving in:", F)
@@ -161,7 +177,7 @@ def write_data_dry( ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2
 
 	return 0
 
-def write_data_moist( ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2, zm, zP, zE, zw, zwskew ):
+def write_data_moist( ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2, zm, zP, zE, zw, ztauP, zetauP, zwskew ):
 	
 	ds.variables['zu1'][:] = zu1[:]
 	ds.variables['zu2'][:] = zu2[:]
@@ -176,6 +192,8 @@ def write_data_moist( ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zeh
 	ds.variables['zP'][:] = zP[:]
 	ds.variables['zE'][:] = zE[:]
 	ds.variables['zw'][:] = zw[:]
+	ds.variables['ztauP'][:] = ztauP[:]
+	ds.variables['zetauP'][:] = zetauP[:]
 	ds.variables['zwskew'][:] = zwskew[:]
 	ds.sync
 
@@ -230,7 +248,8 @@ def load_moist_data( filename ):
     zP = ds.variables['zP'][:]
     zE = ds.variables['zE'][:]
     zw = ds.variables['zw'][:]
+    ztauP = ds.variables['ztauP'][:]
+    zetauP = ds.variables['zetauP'][:]
     zwskew = ds.variables['zwskew'][:]
     time = ds.variables['time'][:]
-    return ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2, zm, zP, zE, zw, zwskew, time
-
+    return ds, zu1, zu2, ztau, zeke1, zeke2, zemf1, zemf2, zehf1, zehf2, zm, zP, zE, zw, ztauP, zetauP, zwskew, time
